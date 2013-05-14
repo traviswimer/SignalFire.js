@@ -2,6 +2,7 @@
 	"name": "signalfire",
 	"version": "0.0.1",
 	"description": "node.js module for RTCPeerConnection signaling",
+	"main": "lib/signalfire.js",
 	"keywords": [
 		"peerconnect",
 		"RTC",

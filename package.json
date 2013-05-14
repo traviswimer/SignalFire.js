@@ -1,0 +1,24 @@
+{
+	"name": "signalfire",
+	"version": "0.0.1",
+	"description": "node.js module for RTCPeerConnection signaling",
+	"keywords": [
+		"peerconnect",
+		"RTC",
+		"signaling"
+	],
+	"dependencies": {
+		"socket.io": "0.9.12"
+	},
+	"devDependencies": {
+		"mocha": "*",
+		"supertest": "*",
+		"socket.io-client": "0.9.x"
+	},
+	"contributors": [
+		{
+			"name": "Travis Wimer",
+			"url": "http://traviswimer.com"
+		}
+	]
+}

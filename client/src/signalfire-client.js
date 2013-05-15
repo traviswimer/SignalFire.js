@@ -13,22 +13,22 @@
 var signalfire = function(){
 
 
-
-//  //  //  //  /
 /////////////////
 // Peer Object //
 /*****************************************************************************/
-	var createPeer=function(socket, options){
+	var createPeer = function(socket, options){
 
 
 	/////////////////////////////////////
 	// Peer Object's Private Variables //
 	//////////////////////////////////////////////////
 	//                                              //
-		var self;
 
-		//holds the ids of the peers that are connecting
-		var connectingPeers={};
+		// holds the RTCPeerConnections of peers
+		var connectingPeers = {};
+
+		// holds ice candidates for uninitialized peer connections
+		var storedIceCandidates = {};
 
 
 		// holds function to call when server requests a connection offer
@@ -43,20 +43,19 @@ var signalfire = function(){
 		// The Peer class
 		function Peer(socket){
 			this.socket = socket;
-			self=this;
 
 
 			// listen for server requesting offer
-			self.socket.on('serverRequestingOffer', sendOfferToServer);
+			this.socket.on('serverRequestingOffer', sendOfferToServer);
 
 			// detect receiving an offer from server
-			self.socket.on('serverSendingOffer', sendAnswerToServer);
+			this.socket.on('serverSendingOffer', sendAnswerToServer);
 
 			// listen for ice candidates
-			self.socket.on('serverSendingAnswer', receiveAnswerFromServer);
+			this.socket.on('serverSendingAnswer', receiveAnswerFromServer);
 
 			// listen for ice candidates
-			self.socket.on('serverSendingIce', receiveIceCandidate);
+			this.socket.on('serverSendingIce', receiveIceCandidate);
 
 		}
 	//                                              //
@@ -73,15 +72,13 @@ var signalfire = function(){
 		var sendOfferToServer = function(data){
 
 			// create RTCPeerConnection
-			var rtcPeerConnection=makeRTCPeer();
+			var rtcPeerConnection = makeRTCPeer();
 
 			// initialize ice candidate listeners
 			iceSetup(rtcPeerConnection, data);
 
-
 			// Add connection to list of peers
 			connectingPeers[data.peerId] = rtcPeerConnection;
-
 
 			// create offer and send to server
 			rtcPeerConnection.createOffer(function(offerResponse){
@@ -97,7 +94,7 @@ var signalfire = function(){
 		var sendAnswerToServer = function(data){
 
 			// create RTCPeerConnection
-			var rtcPeerConnection=makeRTCPeer();
+			var rtcPeerConnection = makeRTCPeer();
 
 			// initialize ice candidate listeners
 			iceSetup(rtcPeerConnection, data);
@@ -112,7 +109,7 @@ var signalfire = function(){
 			rtcPeerConnection.setRemoteDescription(offer, function(){
 				rtcPeerConnection.createAnswer(function(answer){
 					rtcPeerConnection.setLocalDescription(answer);
-					var answerData={
+					var answerData = {
 						peerId:data.peerId,
 						answer:answer
 					};
@@ -137,8 +134,18 @@ var signalfire = function(){
 
 		// receive ice candidates from server
 		var receiveIceCandidate = function(data){
-			if(data.candidate !== null){
-				connectingPeers[data.peerId].addIceCandidate(new RTCIceCandidate(data.candidate));
+
+			// If peer connection has not started, save ice candidates for later
+			// otherwise add them to the connection
+			if(typeof connectingPeers[data.peerId] == 'undefined'){
+				if(!storedIceCandidates[data.peerId]){
+					storedIceCandidates[data.peerId] = [];
+				}
+				storedIceCandidates[data.peerId].push(data);
+			}else{
+				if(data.candidate !== null){
+					connectingPeers[data.peerId].addIceCandidate(new RTCIceCandidate(data.candidate));
+				}
 			}
 		};
 
@@ -146,7 +153,7 @@ var signalfire = function(){
 		// setup ice candidate handling
 		var iceSetup = function(rtcPeerConnection, data){
 			// check if connection has been created
-			rtcPeerConnection.onicechange=function(evt){
+			rtcPeerConnection.onicechange = function(evt){
 				if(rtcPeerConnection.iceConnectionState === 'connected'){
 					signalingComplete(rtcPeerConnection);
 				}
@@ -160,6 +167,14 @@ var signalfire = function(){
 				};
 				socket.emit('clientSendingIce', sendingIceInfo);
 			};
+
+			// check for ice candidates already recieved from peer and add them
+			while(storedIceCandidates[data.peerId] && storedIceCandidates[data.peerId].length>0){
+				receiveIceCandidate(storedIceCandidates[data.peerId].pop());
+			}
+
+			// array will no longer be used, so remove reference
+			delete storedIceCandidates[data.peerId];
 		};
 
 
@@ -177,7 +192,6 @@ var signalfire = function(){
 
 
 
-//  //  //  //  //  
 ////////////////////
 // Public Methods //
 /*****************************************************************************/

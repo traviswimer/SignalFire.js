@@ -35,7 +35,6 @@ describe("signalfire", function() {
 
 						
 
-						console.log("IT IS SIGNALING!!!");
 						return newConnection;
 					}
 				};
@@ -65,7 +64,6 @@ describe("signalfire", function() {
 						return newConnection;
 					},
 					onSignalingComplete: function(){
-						console.log("ITS DONE!!!!!!!");
 						asynchFlag=true;
 					}
 				};

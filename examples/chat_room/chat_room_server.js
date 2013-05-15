@@ -18,6 +18,7 @@ var sf=signalfire.listen(3333,function(peer){
 	});
 },function(error){
 	console.log('something went wrong');
+	console.log(error);
 });
 
 

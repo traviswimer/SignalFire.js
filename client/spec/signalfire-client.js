@@ -9,15 +9,32 @@ describe("signalfire", function() {
 			expect(typeof signalfire.connect).toEqual('function');
 		});
 
-		it("should return false if URL or PeerConnection arguments are invalid", function() {
-			var conn = signalfire.connect();
-			expect(conn).toEqual(false);
+		it("should call fallCallback or throw error if URL or PeerConnection arguments are invalid", function() {
+			try{
+				var conn = signalfire.connect();
+			}catch(err){
+				expect(err).toEqual('Invalid option provided');
+			}
 
-			conn = signalfire.connect("a");
-			expect(conn).toEqual(false);
+			try{
+				conn = signalfire.connect("a");
+			}catch(err){
+				expect(err).toEqual('Invalid option provided');
+			}
 
-			conn = signalfire.connect(2,2);
-			expect(conn).toEqual(false);
+			try{
+				conn = signalfire.connect(2,2);
+			}catch(err){
+				expect(err).toEqual('Invalid option provided');
+			}
+
+
+
+			conn = signalfire.connect(2,2, function(err){
+				expect(err).toEqual('Invalid option provided');
+			});
+
+			
 		});
 
 		var conn;

@@ -16,7 +16,34 @@ var signalfire = function(){
 /////////////////
 // Peer Object //
 /*****************************************************************************/
-	var createPeer = function(socket, options){
+	var createPeer = function(socket, options, failCallback){
+		console.log("at leats it gets this far");
+
+	////////////////////////////////
+	// Peer Object Initialization //
+	//////////////////////////////////////////////////
+	//                                              //
+
+		// The Peer object
+		var peerObject = {
+			socket: socket
+		}
+
+
+		// listen for server requesting offer
+		peerObject.socket.on('serverRequestingOffer', sendOfferToServer);
+
+		// detect receiving an offer from server
+		peerObject.socket.on('serverSendingOffer', sendAnswerToServer);
+
+		// listen for ice candidates
+		peerObject.socket.on('serverSendingAnswer', receiveAnswerFromServer);
+
+		// listen for ice candidates
+		peerObject.socket.on('serverSendingIce', receiveIceCandidate);
+
+	//                                              //
+	//////////////////////////////////////////////////
 
 
 	/////////////////////////////////////
@@ -33,31 +60,11 @@ var signalfire = function(){
 
 		// holds function to call when server requests a connection offer
 		// or provides a connection offer
-		var makeRTCPeer = options.connector || function(){};
+		var makeRTCPeer = options.connector;
 
 		// holds function to call when signaling process is complete
 		var signalingComplete = options.onSignalingComplete || function(){};
 
-
-
-		// The Peer class
-		function Peer(socket){
-			this.socket = socket;
-
-
-			// listen for server requesting offer
-			this.socket.on('serverRequestingOffer', sendOfferToServer);
-
-			// detect receiving an offer from server
-			this.socket.on('serverSendingOffer', sendAnswerToServer);
-
-			// listen for ice candidates
-			this.socket.on('serverSendingAnswer', receiveAnswerFromServer);
-
-			// listen for ice candidates
-			this.socket.on('serverSendingIce', receiveIceCandidate);
-
-		}
 	//                                              //
 	//////////////////////////////////////////////////
 
@@ -69,7 +76,7 @@ var signalfire = function(){
 	//                                              //
 
 		// Receive offer request and return an offer
-		var sendOfferToServer = function(data){
+		function sendOfferToServer(data){
 
 			// create RTCPeerConnection
 			var rtcPeerConnection = makeRTCPeer();
@@ -91,7 +98,7 @@ var signalfire = function(){
 
 
 		// Receive peer offer from server. Return an answer.
-		var sendAnswerToServer = function(data){
+		function sendAnswerToServer(data){
 
 			// create RTCPeerConnection
 			var rtcPeerConnection = makeRTCPeer();
@@ -121,7 +128,7 @@ var signalfire = function(){
 
 
 		// Receive peer answer from server
-		var receiveAnswerFromServer = function(data){
+		function receiveAnswerFromServer(data){
 
 			var peerConn = connectingPeers[data.peerId];
 
@@ -133,7 +140,7 @@ var signalfire = function(){
 		};
 
 		// receive ice candidates from server
-		var receiveIceCandidate = function(data){
+		function receiveIceCandidate(data){
 
 			// If peer connection has not started, save ice candidates for later
 			// otherwise add them to the connection
@@ -151,7 +158,7 @@ var signalfire = function(){
 
 
 		// setup ice candidate handling
-		var iceSetup = function(rtcPeerConnection, data){
+		function iceSetup(rtcPeerConnection, data){
 			// check if connection has been created
 			rtcPeerConnection.onicechange = function(evt){
 				if(rtcPeerConnection.iceConnectionState === 'connected'){
@@ -184,8 +191,8 @@ var signalfire = function(){
 
 
 
-		// Return an instance of the Peer class
-		return new Peer(socket);
+		// Return the Peer object
+		return peerObject;
 	};
 
 /*____________________________________________________________________________*/
@@ -198,22 +205,27 @@ var signalfire = function(){
 
 	var connect = function(options, successCallback, failCallback){
 		/*
-		Options:
+			--OPTIONS--
 			"server" - The url + port of the server to connect to
 			"connector" - A function that is called when the server requests
 						an RTC offer. Must return an RTCPeerConnction object.
 		*/
 
-		if(typeof options != 'object'){
-			return false;
+		// Check if options are valid
+		failCallback = failCallback || function(e){throw e;};
+		if(typeof options != 'object' || typeof options.connector != 'function'){
+			failCallback('Invalid option provided');
+			return;
 		}
 
+		// Create new socket connection
 		var socket = io.connect(options.server, {'force new connection': true});
 
+		// Create new peer once connected
 		socket.on('connect', function () {
 			var peer;
 			try{
-				peer = createPeer(socket, options);
+				peer = createPeer(socket, options, failCallback);
 			}catch(e){
 				failCallback(e);
 			}finally{
@@ -221,6 +233,7 @@ var signalfire = function(){
 			}
 		});
 
+		// detect connection error
 		socket.on('connect_error', function(e){
 			failCallback(e);
 		});

@@ -1,6 +1,6 @@
 /**********************************/
 /* Signalfire Javascript Library  */
-/* Version: 0.0.1                 */
+/* Version: 0.0.2                 */
 /*                                */
 /* Copyright 2013 Travis Wimer    */
 /* http://traviswimer.com         */
@@ -174,7 +174,7 @@ var signalfire = function(){
 					connectingPeers[data.peerId].addIceCandidate(new RTCIceCandidate(data.candidate));
 				}
 			}
-		};
+		}
 
 
 		// setup ice candidate handling

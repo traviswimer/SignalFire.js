@@ -96,8 +96,6 @@ describe('signalfire.js', function(){
 
 				// Offer request from server
 				client1.on('serverRequestingOffer', function (data) {
-					console.log('--------------');
-					console.dir(data);
 					assert.equal(typeof data,'object','received data');
 					assert(data.peerId,'peerId received');
 

@@ -78,15 +78,15 @@ Load module with `require('signalfire')`
 
 Tells the server to listen on a certain port for socket connections to be used for peer connections. Returns a socket.io manager object.
 
-*	_port_ (number) - Server port number to listen on.
-*	_successCallback_ (function) - Callback function to be returned when a 
+*	*port* (number) - Server port number to listen on.
+*	*successCallback* (function) - Callback function to be returned when a 
 	user successful creates a socket connection with the server.
-	*	Returns [peer object](#serverPeerObject)
-*	_failCallback_ (function) - Callback function to be returned when a user fails 
+	*	Returns [peer object](#peer-object-server)
+*	*failCallback* (function) - Callback function to be returned when a user fails 
 	to create a socket connection with the server.
 	*	Returns an error message (string)
 
-### <a id="serverPeerObject"></a> peer object ###
+### peer object - _server_ ###
 
 #### socket ####
 
@@ -96,7 +96,7 @@ Contains a socket.io object
 
 Connects the peer calling the method to a specified peer
 
-*	_peer_ ([peer object](#serverPeerObject)) - Peer to connect to.
+*	*peer* ([peer object](#peer-object-server)) - Peer to connect to.
 
 #### getPeerId() ####
 

@@ -16,7 +16,6 @@ The purpose of SignalFire.js is to:
 ### Server-side ###
 
 1.	`npm install signalfire`
-2.	`npm install` to install dependencies
 3.	use `require('signalfire')` in node
 
 ### Client-side ###

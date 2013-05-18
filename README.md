@@ -11,7 +11,20 @@ The purpose of SignalFire.js is to:
 *	Give developer control before signaling
 *	Return complete control to the developer after signaling
 
-## Basic Example Usage ##
+## Installation ##
+
+### Server-side ###
+
+1.	`npm install signalfire`
+2.	`npm install` to install dependencies
+3.	use `require('signalfire')` in node
+
+### Client-side ###
+
+*	The main script is `SignalFire.js / client / src / signalfire-client.js`
+*	`adaptor.js` and `socke.io.js` are necessary dependencies in the same directory
+
+## Basic Usage Example ##
 
 SignalFire consists of a client-side script and a node module for signaling. Each is show below:
 
@@ -52,3 +65,39 @@ var sf=signalfire.listen(3333,function(peer){
 	console.log('something went wrong');
 });
 ```
+
+# API Documentation #
+
+## Server-side ##
+
+### Signalfire Object ###
+
+Load module with `require('signalfire')`
+
+### listen( port, successCallback, failCallback ) ###
+
+Tells the server to listen on a certain port for socket connections to be used for peer connections. Returns a socket.io manager object.
+
+*	_port_ (number) - Server port number to listen on.
+*	_successCallback_ (function) - Callback function to be returned when a 
+	user successful creates a socket connection with the server.
+	*	Returns [peer object](#serverPeerObject)
+*	_failCallback_ (function) - Callback function to be returned when a user fails 
+	to create a socket connection with the server.
+	*	Returns an error message (string)
+
+### <a id="serverPeerObject"></a> peer object ###
+
+#### socket ####
+
+Contains a socket.io object
+
+#### connectToPeer( peer ) ####
+
+Connects the peer calling the method to a specified peer
+
+*	_peer_ ([peer object](#serverPeerObject)) - Peer to connect to.
+
+#### getPeerId() ####
+
+Returns the unique ID for the peer object.

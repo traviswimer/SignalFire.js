@@ -10,8 +10,9 @@ describe("signalfire", function() {
 		});
 
 		it("should call fallCallback or throw error if URL or PeerConnection arguments are invalid", function() {
+			var conn;
 			try{
-				var conn = signalfire.connect();
+				conn = signalfire.connect();
 			}catch(err){
 				expect(err).toEqual('Invalid option provided');
 			}
@@ -34,15 +35,15 @@ describe("signalfire", function() {
 				expect(err).toEqual('Invalid option provided');
 			});
 
-			
+
 		});
 
-		var conn;
+		describe("onSignalingComplete",function(){
+			var conn, conn2;
+			var async = new AsyncSpec(this);
 
-		it("should return socketio object if valid arguments", function() {
-			var asynchFlag=false;
+			async.it("should return socketio object if valid arguments", function(done) {
 
-			runs(function(){
 				var options = {
 					server: "http://localhost:3333",
 					connector: function(){
@@ -50,28 +51,20 @@ describe("signalfire", function() {
 							"iceServers": [{ "url": "stun:stun.l.google.com:19302" }]
 						});
 
-						
-
 						return newConnection;
 					}
 				};
 
 				conn = signalfire.connect(options,function(){
-					asynchFlag=true;
+					expect(typeof conn).toEqual('object');
+					done();
 				});
+
 			});
 
-			waitsFor(function() {
-				expect(typeof conn).toEqual('object');
-				return asynchFlag;
-			}, "socketio connect complete", 2000);
-		});
 
+			async.it("should call onSignalingComplete function", function(done) {
 
-		it("should do something when emitting custom request", function() {
-			var asynchFlag=false;
-
-			runs(function(){
 				var options = {
 					server: "http://localhost:3333",
 					connector: function(){
@@ -81,7 +74,9 @@ describe("signalfire", function() {
 						return newConnection;
 					},
 					onSignalingComplete: function(){
-						asynchFlag=true;
+						expect(typeof conn).toEqual('object');
+						conn.emit('disconnectAll',{"room": "test"});
+						done();
 					}
 				};
 
@@ -93,15 +88,165 @@ describe("signalfire", function() {
 						roomName:"test"
 					});
 				});
+
 			});
 
-			waitsFor(function() {
-				expect(typeof conn).toEqual('object');
-				return asynchFlag;
-			}, "socketio connect complete", 2000);
+
 		});
 
 
+		describe("onSignalingFail",function(){
+			var failAsync = new AsyncSpec(this);
+			var options;
+
+			beforeEach(function(){
+				options = {
+					server: "http://localhost:3333",
+					connector: function(){
+						var newConnection = new RTCPeerConnection({
+							"iceServers": [{ "url": "stun:stun.l.google.com:19302" }]
+						});
+						return newConnection;
+					}
+				};
+			});
+
+
+			failAsync.it("should cause fail if offer request null", function(done) {
+
+				options.onSignalingFail = function(err){
+					expect(err).toEqual('Invalid data recieved from server');
+					done();
+				};
+
+				var conn = signalfire.connect(options, function(){
+					conn.emit('testServerRequest',{
+						requestType: 'serverRequestingOffer',
+						data: null
+					});
+				});
+
+			});
+
+			failAsync.it("should cause fail if offer request peerId undefined", function(done) {
+
+				options.onSignalingFail = function(err){
+					expect(err).toEqual('Invalid data recieved from server');
+					done();
+				};
+
+				var conn = signalfire.connect(options, function(){
+					conn.emit('testServerRequest',{
+						requestType: 'serverRequestingOffer',
+						data: {}
+					});
+				});
+
+			});
+
+			failAsync.it("should cause fail if peer offer data is null", function(done) {
+
+				options.onSignalingFail = function(err){
+					expect(err).toEqual('Invalid data recieved from server');
+					done();
+				};
+
+				var conn = signalfire.connect(options, function(){
+					conn.emit('testServerRequest',{
+						requestType: 'serverSendingOffer',
+						data: null
+					});
+				});
+
+			});
+
+			failAsync.it("should cause fail if peer offer data does not contain peerId", function(done) {
+
+				options.onSignalingFail = function(err){
+					expect(err).toEqual('Invalid data recieved from server');
+					done();
+				};
+
+				var conn = signalfire.connect(options, function(){
+					conn.emit('testServerRequest',{
+						requestType: 'serverSendingOffer',
+						data: {offer:{}}
+					});
+				});
+
+			});
+
+			failAsync.it("should cause fail if peer offer data does not contain offer", function(done) {
+
+				options.onSignalingFail = function(err){
+					expect(err).toEqual('Invalid data recieved from server');
+					done();
+				};
+
+				var conn = signalfire.connect(options, function(){
+					conn.emit('testServerRequest',{
+						requestType: 'serverSendingOffer',
+						data: {peerId:1}
+					});
+				});
+
+			});
+
+			failAsync.it("should cause fail if peer answer data is null", function(done) {
+
+				options.onSignalingFail = function(err){
+					expect(err).toEqual('Invalid data recieved from server');
+					done();
+				};
+
+				var conn = signalfire.connect(options, function(){
+					conn.emit('testServerRequest',{
+						requestType: 'serverSendingAnswer',
+						data: null
+					});
+				});
+
+			});
+
+			failAsync.it("should cause fail if peer answer data does not contain peerId", function(done) {
+
+				options.onSignalingFail = function(err){
+					expect(err).toEqual('Invalid data recieved from server');
+					done();
+				};
+
+				var conn = signalfire.connect(options, function(){
+					conn.emit('testServerRequest',{
+						requestType: 'serverSendingAnswer',
+						data: {answer:{}}
+					});
+				});
+
+			});
+
+			failAsync.it("should cause fail if peer answer data does not contain answer", function(done) {
+
+				options.onSignalingFail = function(err){
+					expect(err).toEqual('Invalid data recieved from server');
+					done();
+				};
+
+				var conn = signalfire.connect(options, function(){
+					conn.emit('testServerRequest',{
+						requestType: 'serverSendingAnswer',
+						data: {peerId:1}
+					});
+				});
+
+			});
+
+
+
+
+		});
+
 	});
+
+
 
 });

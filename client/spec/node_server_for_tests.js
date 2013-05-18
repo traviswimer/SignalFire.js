@@ -12,6 +12,20 @@ var sf=signalfire.listen(3333,function(peer){
 			peer1.connectToPeer(peer2);
 		}
 	});
+
+
+
+	peer.socket.on('testServerRequest', function(data){
+		peer.socket.emit(data.requestType, data.data);
+	});
+
+	peer.socket.on('disconnectAll', function(data){
+		var curPeer;
+		while(curPeer = connectedPeers[data.room].pop()){
+			curPeer.socket.disconnect();
+		}
+	});
+
 },function(error){});
 
 

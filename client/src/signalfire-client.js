@@ -17,7 +17,6 @@ var signalfire = function(){
 // Peer Object //
 /*****************************************************************************/
 	var createPeer = function(socket, options, failCallback){
-		console.log("at leats it gets this far");
 
 	////////////////////////////////
 	// Peer Object Initialization //
@@ -27,7 +26,7 @@ var signalfire = function(){
 		// The Peer object
 		var peerObject = {
 			socket: socket
-		}
+		};
 
 
 		// listen for server requesting offer
@@ -65,6 +64,9 @@ var signalfire = function(){
 		// holds function to call when signaling process is complete
 		var signalingComplete = options.onSignalingComplete || function(){};
 
+		// holds function to call when signaling fails
+		var signalingFail = options.onSignalingFail || function(){};
+
 	//                                              //
 	//////////////////////////////////////////////////
 
@@ -77,6 +79,12 @@ var signalfire = function(){
 
 		// Receive offer request and return an offer
 		function sendOfferToServer(data){
+
+			// fail if required data is not received
+			if(!data || !data.peerId){
+				signalingFail('Invalid data recieved from server');
+				return;
+			}
 
 			// create RTCPeerConnection
 			var rtcPeerConnection = makeRTCPeer();
@@ -94,11 +102,17 @@ var signalfire = function(){
 					socket.emit('clientSendingOffer', data);
 				});
 			});
-		};
+		}
 
 
 		// Receive peer offer from server. Return an answer.
 		function sendAnswerToServer(data){
+
+			// fail if required data is not received
+			if(!data || !data.peerId || !data.offer){
+				signalingFail('Invalid data recieved from server');
+				return;
+			}
 
 			// create RTCPeerConnection
 			var rtcPeerConnection = makeRTCPeer();
@@ -124,11 +138,17 @@ var signalfire = function(){
 				});
 			});
 
-		};
+		}
 
 
 		// Receive peer answer from server
 		function receiveAnswerFromServer(data){
+
+			// fail if required data is not received
+			if(!data || !data.peerId || !data.answer){
+				signalingFail('Invalid data recieved from server');
+				return;
+			}
 
 			var peerConn = connectingPeers[data.peerId];
 
@@ -137,7 +157,7 @@ var signalfire = function(){
 
 			});
 
-		};
+		}
 
 		// receive ice candidates from server
 		function receiveIceCandidate(data){
@@ -182,7 +202,7 @@ var signalfire = function(){
 
 			// array will no longer be used, so remove reference
 			delete storedIceCandidates[data.peerId];
-		};
+		}
 
 
 

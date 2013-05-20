@@ -2,6 +2,9 @@
 
 An RTCPeerConnection signaling library/npm module. It does the signaling and then gets out of your way.
 
+*	[Quick Tutorial](http://signalfirejs.github.io/tutorial.html)
+*	Twitter: [@SignalFireJS](https://twitter.com/SignalFireJS)
+
 ## Why do I need this? ##
 
 There are other open-source signaling options, but many create a layer of abstraction around the RTCPeerConnection object. Although this can be useful, it can also be restrictive, especially when the WebRTC specification is still in flux.

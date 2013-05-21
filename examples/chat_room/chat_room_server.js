@@ -9,17 +9,15 @@ var sf=signalfire.listen(3333,function(peer){
 		if(roomArray.length>1){
 			for(var i=0; i<roomArray.length; i++){
 				if(peer !== roomArray[i]){
-					console.dir(peer);
-					console.dir(roomArray[i]);
 					peer.connectToPeer(roomArray[i]);
 				}
 			}
 		}
 	});
 },function(error){
-	console.log('something went wrong');
 	console.log(error);
 });
+
 
 
 var addToRoom = function(roomName, peer){
@@ -28,4 +26,12 @@ var addToRoom = function(roomName, peer){
 	}
 
 	connectedPeers[roomName].push(peer);
+
+	// Remove peer from list when they disconnect
+	peer.socket.on('disconnect', function () {
+		var arrayId = connectedPeers[roomName].indexOf(peer);
+		if(arrayId >= 0){
+			connectedPeers[roomName].splice(arrayId,1);
+		}
+	});
 };

@@ -41,6 +41,7 @@ describe("signalfire", function() {
 		describe("onSignalingComplete",function(){
 			var conn, conn2;
 			var async = new AsyncSpec(this);
+			var storeRetrievedPeerConnection;
 
 			async.it("should return socketio object if valid arguments", function(done) {
 
@@ -73,8 +74,9 @@ describe("signalfire", function() {
 						});
 						return newConnection;
 					},
-					onSignalingComplete: function(){
-						expect(typeof conn).toEqual('object');
+					onSignalingComplete: function(peerConnection){
+						expect(typeof peerConnection).toEqual('object');
+						storeRetrievedPeerConnection=peerConnection;
 						conn.emit('disconnectAll',{"room": "test"});
 						done();
 					}
@@ -89,6 +91,10 @@ describe("signalfire", function() {
 					});
 				});
 
+			});
+
+			it("reference to peer connection should still exist",function(){
+				expect(typeof storeRetrievedPeerConnection).toEqual('object');
 			});
 
 

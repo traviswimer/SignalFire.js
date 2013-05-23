@@ -1,6 +1,6 @@
 {
 	"name": "signalfire",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "node.js module for RTCPeerConnection signaling",
 	"main": "lib/signalfire.js",
 	"keywords": [

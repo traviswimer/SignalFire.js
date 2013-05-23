@@ -1,6 +1,6 @@
 /**********************************/
 /* Signalfire Javascript Library  */
-/* Version: 0.0.2                 */
+/* Version: 0.0.3                 */
 /*                                */
 /* Copyright 2013 Travis Wimer    */
 /* http://traviswimer.com         */
@@ -183,6 +183,10 @@ var signalfire = function(){
 			rtcPeerConnection.onicechange = function(evt){
 				if(rtcPeerConnection.iceConnectionState === 'connected'){
 					signalingComplete(rtcPeerConnection);
+
+					// developer is expected to store rtc connection within
+					// their app, so it can be removed from the list
+					delete connectingPeers[data.peerId];
 				}
 			};
 
@@ -233,7 +237,7 @@ var signalfire = function(){
 
 			"onSignalingComplete" - Callback function for when the signaling 
 						process has successfully created a peer connection.
-						
+
 			"onSignalingFail" - Callback function for when there is an error 
 						in the signaling process.
 		*/

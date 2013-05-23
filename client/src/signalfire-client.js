@@ -227,8 +227,15 @@ var signalfire = function(){
 		/*
 			--OPTIONS--
 			"server" - The url + port of the server to connect to
+
 			"connector" - A function that is called when the server requests
 						an RTC offer. Must return an RTCPeerConnction object.
+
+			"onSignalingComplete" - Callback function for when the signaling 
+						process has successfully created a peer connection.
+						
+			"onSignalingFail" - Callback function for when there is an error 
+						in the signaling process.
 		*/
 
 		// Check if options are valid

@@ -90,7 +90,7 @@ describe('signalfire.js', function(){
 
 		describe('signaling',function(){
 
-			it('connectToPeer complete all signaling',function(done){
+			it('connectToPeer should complete all signaling',function(done){
 
 				peer1.connectToPeer(peer2);
 
@@ -141,6 +141,17 @@ describe('signalfire.js', function(){
 			});
 
 
+		});
+
+
+		describe('getter methods',function(){
+			it('getPeerId should return 2',function(){
+				assert.equal(peer1.getPeerId(), 2);
+			});
+
+			it('getPeerOffer should return a string',function(){
+				assert.equal(typeof peer1.getPeerOffer(), "string");
+			});
 		});
 
 

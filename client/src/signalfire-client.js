@@ -179,8 +179,9 @@ var signalfire = function(){
 
 		// setup ice candidate handling
 		function iceSetup(rtcPeerConnection, data){
+
 			// check if connection has been created
-			rtcPeerConnection.onicechange = function(evt){
+			rtcPeerConnection.oniceconnectionstatechange = function(evt){
 				if(rtcPeerConnection.iceConnectionState === 'connected'){
 					signalingComplete(rtcPeerConnection);
 

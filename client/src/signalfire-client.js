@@ -97,6 +97,7 @@ var signalfire = function(){
 
 			// create offer and send to server
 			rtcPeerConnection.createOffer(function(offerResponse){
+				console.dir(offerResponse);
 				data.offer = offerResponse;
 				rtcPeerConnection.setLocalDescription(offerResponse, function(){
 					socket.emit('clientSendingOffer', data);
@@ -135,6 +136,16 @@ var signalfire = function(){
 						answer:answer
 					};
 					socket.emit('clientSendingAnswer', answerData);
+
+				// Firefox sends ICE with offers/answers, so
+				// connection should be complete on this end
+				if (navigator.mozGetUserMedia) {
+					signalingComplete(connectingPeers[data.peerId]);
+
+					// developer is expected to store rtc connection within
+					// their app, so it can be removed from the list
+					delete connectingPeers[data.peerId];
+				}
 				});
 			});
 
@@ -153,8 +164,18 @@ var signalfire = function(){
 			var peerConn = connectingPeers[data.peerId];
 
 			var answer = new RTCSessionDescription(data.answer);
-			peerConn.setRemoteDescription(answer, function(){
+			peerConn.setRemoteDescription(answer, function(eee){
+				console.dir(peerConn);
 
+				// Firefox sends ICE with offers/answers, so
+				// connection should be complete
+				if (navigator.mozGetUserMedia) {
+					signalingComplete(connectingPeers[data.peerId]);
+
+					// developer is expected to store rtc connection within
+					// their app, so it can be removed from the list
+					delete connectingPeers[data.peerId];
+				}
 			});
 
 		}
@@ -181,7 +202,8 @@ var signalfire = function(){
 		function iceSetup(rtcPeerConnection, data){
 
 			// check if connection has been created
-			rtcPeerConnection.oniceconnectionstatechange = function(evt){
+			rtcPeerConnection.oniceconnectionstatechange = rtcPeerConnection.onicechange = function(evt){
+				console.log('-ice state change-');
 				if(rtcPeerConnection.iceConnectionState === 'connected'){
 					signalingComplete(rtcPeerConnection);
 
@@ -193,6 +215,7 @@ var signalfire = function(){
 
 			// listen for ice candidates and send to server
 			rtcPeerConnection.onicecandidate = function(iceData){
+				console.log('candidate received');
 				var sendingIceInfo = {
 					peerId: data.peerId,
 					candidate: iceData.candidate
@@ -207,7 +230,10 @@ var signalfire = function(){
 
 			// array will no longer be used, so remove reference
 			delete storedIceCandidates[data.peerId];
+
 		}
+
+
 
 
 

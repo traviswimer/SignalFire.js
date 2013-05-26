@@ -49,7 +49,7 @@ describe("signalfire", function() {
 					server: "http://localhost:3333",
 					connector: function(){
 						var newConnection = new RTCPeerConnection({
-							"iceServers": [{ "url": "stun:stun.l.google.com:19302" }]
+							"iceServers": [{ "url": "stun:173.194.73.127:19302" }]
 						});
 
 						return newConnection;
@@ -69,9 +69,22 @@ describe("signalfire", function() {
 				var options = {
 					server: "http://localhost:3333",
 					connector: function(){
-						var newConnection = new RTCPeerConnection({
-							"iceServers": [{ "url": "stun:stun.l.google.com:19302" }]
+						var newConnection = new RTCPeerConnection(
+							{
+								"iceServers": [{ "url": "stun:173.194.73.127:19302" }]
+							},
+							{
+								'optional': [
+									{'DtlsSrtpKeyAgreement': true}, 
+									{'RtpDataChannels': true }
+								] 
+							}
+						);
+
+						var clientChannel = newConnection.createDataChannel("chat", {
+							reliable: false
 						});
+
 						return newConnection;
 					},
 					onSignalingComplete: function(peerConnection){
@@ -110,7 +123,7 @@ describe("signalfire", function() {
 					server: "http://localhost:3333",
 					connector: function(){
 						var newConnection = new RTCPeerConnection({
-							"iceServers": [{ "url": "stun:stun.l.google.com:19302" }]
+							"iceServers": [{ "url": "stun:173.194.73.127:19302" }]
 						});
 						return newConnection;
 					}

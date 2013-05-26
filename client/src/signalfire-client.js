@@ -97,7 +97,6 @@ var signalfire = function(){
 
 			// create offer and send to server
 			rtcPeerConnection.createOffer(function(offerResponse){
-				console.dir(offerResponse);
 				data.offer = offerResponse;
 				rtcPeerConnection.setLocalDescription(offerResponse, function(){
 					socket.emit('clientSendingOffer', data);
@@ -165,7 +164,6 @@ var signalfire = function(){
 
 			var answer = new RTCSessionDescription(data.answer);
 			peerConn.setRemoteDescription(answer, function(eee){
-				console.dir(peerConn);
 
 				// Firefox sends ICE with offers/answers, so
 				// connection should be complete
@@ -203,7 +201,6 @@ var signalfire = function(){
 
 			// check if connection has been created
 			rtcPeerConnection.oniceconnectionstatechange = rtcPeerConnection.onicechange = function(evt){
-				console.log('-ice state change-');
 				if(rtcPeerConnection.iceConnectionState === 'connected'){
 					signalingComplete(rtcPeerConnection);
 
@@ -215,7 +212,6 @@ var signalfire = function(){
 
 			// listen for ice candidates and send to server
 			rtcPeerConnection.onicecandidate = function(iceData){
-				console.log('candidate received');
 				var sendingIceInfo = {
 					peerId: data.peerId,
 					candidate: iceData.candidate

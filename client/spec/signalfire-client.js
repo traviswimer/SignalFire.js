@@ -47,12 +47,12 @@ describe("signalfire", function() {
 
 				var options = {
 					server: "http://localhost:3333",
-					connector: function(){
+					connector: function(setConnection){
 						var newConnection = new RTCPeerConnection({
 							"iceServers": [{ "url": "stun:173.194.73.127:19302" }]
 						});
 
-						return newConnection;
+						setConnection(newConnection);
 					}
 				};
 
@@ -65,32 +65,18 @@ describe("signalfire", function() {
 
 
 			async.it("should call onSignalingComplete function", function(done) {
-
+				console.log("calling the function");
 				var options = {
 					server: "http://localhost:3333",
-					connector: function(){
-						var newConnection = new RTCPeerConnection(
-							{
-								"iceServers": [{ "url": "stun:173.194.73.127:19302" }]
-							},
-							{
-								'optional': [
-									{'DtlsSrtpKeyAgreement': true}, 
-									{'RtpDataChannels': true }
-								] 
-							}
-						);
+					connector: function(setConnection){
+						// Creates a datachannel connection. Sets it up based on your browser
+						console.log("connector called");
 
-						var clientChannel = newConnection.createDataChannel("chat", {
-							reliable: false
-						});
-
-						return newConnection;
+						setupDataChannelConnection(setConnection);
 					},
 					onSignalingComplete: function(peerConnection){
 						expect(typeof peerConnection).toEqual('object');
-						storeRetrievedPeerConnection=peerConnection;
-						conn.emit('disconnectAll',{"room": "test"});
+						storeRetrievedPeerConnection = peerConnection;
 						done();
 					}
 				};
@@ -104,10 +90,14 @@ describe("signalfire", function() {
 					});
 				});
 
-			});
+			}, 10000);
 
 			it("reference to peer connection should still exist",function(){
 				expect(typeof storeRetrievedPeerConnection).toEqual('object');
+
+				conn.emit('disconnectAll',{"room": "test"});
+				conn.disconnect();
+				conn2.disconnect();
 			});
 
 
@@ -121,11 +111,11 @@ describe("signalfire", function() {
 			beforeEach(function(){
 				options = {
 					server: "http://localhost:3333",
-					connector: function(){
+					connector: function(setConnection){
 						var newConnection = new RTCPeerConnection({
 							"iceServers": [{ "url": "stun:173.194.73.127:19302" }]
 						});
-						return newConnection;
+						return setConnection(newConnection);
 					}
 				};
 			});
@@ -269,3 +259,73 @@ describe("signalfire", function() {
 
 
 });
+
+
+
+function setupDataChannelConnection(setConnection){
+
+	var newConnection;
+	var clientChannel;
+
+	if(window.webrtcDetectedBrowser === "firefox"){
+		// Firefox's WebRTC implemention is odd, and requires a fake media stream
+		// to make datachannels work
+
+		try{
+
+			newConnection = new RTCPeerConnection(
+				{
+					"iceServers": [{ "url": "stun:173.194.73.127:19302" }]
+				}
+			);
+
+			clientChannel = newConnection.createDataChannel("chat", {
+				reliable: false
+			});
+			clientChannel.binaryType = 'blob';
+
+			getUserMedia(
+				{
+					audio: true,
+					fake: true
+				},
+				function(stream) {
+					console.log("stream created");
+					newConnection.addStream(stream);
+					setConnection(newConnection);
+				},
+				function(){
+					console.log("FAIL!!!! OH NO");
+				}
+			);
+
+		}catch(e){
+			console.dir(e);
+		}
+	}else{
+
+		try{
+
+			newConnection = new RTCPeerConnection(
+				{
+					"iceServers": [{ "url": "stun:173.194.73.127:19302" }]
+				},
+				{
+					'optional': [
+						{'DtlsSrtpKeyAgreement': true},
+						{'RtpDataChannels': true }
+					]
+				}
+			);
+
+			clientChannel = newConnection.createDataChannel("chat", {
+				reliable: false
+			});
+
+			setConnection(newConnection);
+
+		}catch(e){
+			console.dir(e);
+		}
+	}
+}

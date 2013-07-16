@@ -35,7 +35,7 @@ var signalfire = function(){
 		// detect receiving an offer from server
 		peerObject.socket.on('serverSendingOffer', sendAnswerToServer);
 
-		// listen for ice candidates
+		// listen for server sending an answer
 		peerObject.socket.on('serverSendingAnswer', receiveAnswerFromServer);
 
 		// listen for ice candidates
@@ -87,21 +87,32 @@ var signalfire = function(){
 			}
 
 			// create RTCPeerConnection
-			var rtcPeerConnection = makeRTCPeer();
+			makeRTCPeer(function(rtcPeerConnection){
+				// initialize ice candidate listeners
+				iceSetup(rtcPeerConnection, data);
 
-			// initialize ice candidate listeners
-			iceSetup(rtcPeerConnection, data);
+				// Add connection to list of peers
+				connectingPeers[data.peerId] = rtcPeerConnection;
 
-			// Add connection to list of peers
-			connectingPeers[data.peerId] = rtcPeerConnection;
-
-			// create offer and send to server
-			rtcPeerConnection.createOffer(function(offerResponse){
-				data.offer = offerResponse;
-				rtcPeerConnection.setLocalDescription(offerResponse, function(){
-					socket.emit('clientSendingOffer', data);
-				});
-			});
+				// create offer and send to server
+				rtcPeerConnection.createOffer(
+					function(offerResponse){
+						data.offer = offerResponse;
+						rtcPeerConnection.setLocalDescription(offerResponse, function(){
+							socket.emit('clientSendingOffer', data);
+						});
+					},
+					null,
+					{
+						optional: [],
+						mandatory: {
+							OfferToReceiveAudio: true,
+							OfferToReceiveVideo: true
+						}
+					}
+				);
+			},
+			false);
 		}
 
 
@@ -115,38 +126,50 @@ var signalfire = function(){
 			}
 
 			// create RTCPeerConnection
-			var rtcPeerConnection = makeRTCPeer();
+			makeRTCPeer(function(rtcPeerConnection){
+				// initialize ice candidate listeners
+				iceSetup(rtcPeerConnection, data);
 
-			// initialize ice candidate listeners
-			iceSetup(rtcPeerConnection, data);
+				// Add connection to list of peers
+				connectingPeers[data.peerId] = rtcPeerConnection;
 
-			// Add connection to list of peers
-			connectingPeers[data.peerId] = rtcPeerConnection;
+				// Create description from offer received
+				var offer = new RTCSessionDescription(data.offer);
 
-			// Create description from offer received
-			var offer = new RTCSessionDescription(data.offer);
+				// Set Description, create answer, send answer to server
+				rtcPeerConnection.setRemoteDescription(offer, function(){
+					rtcPeerConnection.createAnswer(
 
-			// Set Description, create answer, send answer to server
-			rtcPeerConnection.setRemoteDescription(offer, function(){
-				rtcPeerConnection.createAnswer(function(answer){
-					rtcPeerConnection.setLocalDescription(answer);
-					var answerData = {
-						peerId:data.peerId,
-						answer:answer
-					};
-					socket.emit('clientSendingAnswer', answerData);
+						function(answer){
+							rtcPeerConnection.setLocalDescription(answer);
+							var answerData = {
+								peerId:data.peerId,
+								answer:answer
+							};
+							socket.emit('clientSendingAnswer', answerData);
 
-				// Firefox sends ICE with offers/answers, so
-				// connection should be complete on this end
-				if (navigator.mozGetUserMedia) {
-					signalingComplete(connectingPeers[data.peerId]);
+							// Firefox sends ICE with offers/answers, so
+							// connection should be complete on this end
+							if(navigator.mozGetUserMedia){
+								signalingComplete(connectingPeers[data.peerId]);
 
-					// developer is expected to store rtc connection within
-					// their app, so it can be removed from the list
-					delete connectingPeers[data.peerId];
-				}
+								// developer is expected to store rtc connection within
+								// their app, so it can be removed from the list
+								delete connectingPeers[data.peerId];
+							}
+						},
+						null,
+						{
+							optional: [],
+							mandatory: {
+								OfferToReceiveAudio: true,
+								OfferToReceiveVideo: true
+							}
+						}
+					);
 				});
-			});
+			},
+			true);
 
 		}
 
@@ -163,11 +186,11 @@ var signalfire = function(){
 			var peerConn = connectingPeers[data.peerId];
 
 			var answer = new RTCSessionDescription(data.answer);
-			peerConn.setRemoteDescription(answer, function(eee){
+			peerConn.setRemoteDescription(answer, function(){
 
 				// Firefox sends ICE with offers/answers, so
 				// connection should be complete
-				if (navigator.mozGetUserMedia) {
+				if(navigator.mozGetUserMedia){
 					signalingComplete(connectingPeers[data.peerId]);
 
 					// developer is expected to store rtc connection within
@@ -187,9 +210,11 @@ var signalfire = function(){
 				if(!storedIceCandidates[data.peerId]){
 					storedIceCandidates[data.peerId] = [];
 				}
-				storedIceCandidates[data.peerId].push(data);
+				if(data && data.candidate !== null){
+					storedIceCandidates[data.peerId].push(data);
+				}
 			}else{
-				if(data.candidate !== null){
+				if(data && data.candidate !== null){
 					connectingPeers[data.peerId].addIceCandidate(new RTCIceCandidate(data.candidate));
 				}
 			}
@@ -220,12 +245,19 @@ var signalfire = function(){
 			};
 
 			// check for ice candidates already recieved from peer and add them
-			while(storedIceCandidates[data.peerId] && storedIceCandidates[data.peerId].length>0){
-				receiveIceCandidate(storedIceCandidates[data.peerId].pop());
-			}
+			// (unnecessary in firefox)
+			//if(!navigator.mozGetUserMedia){
+				var hasVisited = false;
+				if(storedIceCandidates[data.peerId]){
+					while(hasVisited == false && storedIceCandidates[data.peerId].length > 0){
+						hasVisited = true;
+						receiveIceCandidate(storedIceCandidates[data.peerId].pop());
+					}
 
-			// array will no longer be used, so remove reference
-			delete storedIceCandidates[data.peerId];
+					// array will no longer be used, so remove reference
+					delete storedIceCandidates[data.peerId];
+				}
+			//}
 
 		}
 

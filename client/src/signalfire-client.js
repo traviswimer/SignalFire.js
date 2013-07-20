@@ -1,6 +1,6 @@
 /**********************************/
 /* Signalfire Javascript Library  */
-/* Version: 0.0.3                 */
+/* Version: 0.0.4                 */
 /*                                */
 /* Copyright 2013 Travis Wimer    */
 /* http://traviswimer.com         */
@@ -147,16 +147,6 @@ var signalfire = function(){
 								answer:answer
 							};
 							socket.emit('clientSendingAnswer', answerData);
-
-							// Firefox sends ICE with offers/answers, so
-							// connection should be complete on this end
-							if(navigator.mozGetUserMedia){
-								signalingComplete(connectingPeers[data.peerId]);
-
-								// developer is expected to store rtc connection within
-								// their app, so it can be removed from the list
-								delete connectingPeers[data.peerId];
-							}
 						},
 						null,
 						{
@@ -188,15 +178,6 @@ var signalfire = function(){
 			var answer = new RTCSessionDescription(data.answer);
 			peerConn.setRemoteDescription(answer, function(){
 
-				// Firefox sends ICE with offers/answers, so
-				// connection should be complete
-				if(navigator.mozGetUserMedia){
-					signalingComplete(connectingPeers[data.peerId]);
-
-					// developer is expected to store rtc connection within
-					// their app, so it can be removed from the list
-					delete connectingPeers[data.peerId];
-				}
 			});
 
 		}
@@ -223,8 +204,11 @@ var signalfire = function(){
 
 		// setup ice candidate handling
 		function iceSetup(rtcPeerConnection, data){
+			//////////////////////////////////////////////
+			// Determine if connection has been created //
+			//////////////////////////////////////////////
 
-			// check if connection has been created
+			// These are the callbacks implemented by Chrome
 			rtcPeerConnection.oniceconnectionstatechange = rtcPeerConnection.onicechange = function(evt){
 				if(rtcPeerConnection.iceConnectionState === 'connected'){
 					signalingComplete(rtcPeerConnection);
@@ -234,6 +218,21 @@ var signalfire = function(){
 					delete connectingPeers[data.peerId];
 				}
 			};
+
+			// These are the callbacks implemented by Firefox
+			rtcPeerConnection.ongatheringchange = function(){
+				if(rtcPeerConnection.readyState === 'active'){
+					signalingComplete(rtcPeerConnection);
+
+					// developer is expected to store rtc connection within
+					// their app, so it can be removed from the list
+					delete connectingPeers[data.peerId];
+				}
+			};
+
+			//////////////////////////////////////////////
+
+
 
 			// listen for ice candidates and send to server
 			rtcPeerConnection.onicecandidate = function(iceData){
@@ -245,23 +244,18 @@ var signalfire = function(){
 			};
 
 			// check for ice candidates already recieved from peer and add them
-			// (unnecessary in firefox)
-			//if(!navigator.mozGetUserMedia){
-				var hasVisited = false;
-				if(storedIceCandidates[data.peerId]){
-					while(hasVisited == false && storedIceCandidates[data.peerId].length > 0){
-						hasVisited = true;
-						receiveIceCandidate(storedIceCandidates[data.peerId].pop());
-					}
-
-					// array will no longer be used, so remove reference
-					delete storedIceCandidates[data.peerId];
+			var hasVisited = false;
+			if(storedIceCandidates[data.peerId]){
+				while(hasVisited === false && storedIceCandidates[data.peerId].length > 0){
+					hasVisited = true;
+					receiveIceCandidate(storedIceCandidates[data.peerId].pop());
 				}
-			//}
+
+				// array will no longer be used, so remove reference
+				delete storedIceCandidates[data.peerId];
+			}
 
 		}
-
-
 
 
 

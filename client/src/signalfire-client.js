@@ -111,8 +111,7 @@ var signalfire = function(){
 						}
 					}
 				);
-			},
-			false);
+			});
 		}
 
 
@@ -158,8 +157,7 @@ var signalfire = function(){
 						}
 					);
 				});
-			},
-			true);
+			});
 
 		}
 

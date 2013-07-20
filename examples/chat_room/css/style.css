@@ -18,6 +18,7 @@ h1{
 	width: 90%;
 }
 	.chat-message-container{
+		clear: both;
 		margin: 2px;
 	}
 		.chat-name{

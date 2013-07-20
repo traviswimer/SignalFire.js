@@ -3,6 +3,14 @@
 // stores an array of peer connections
 var connectedPeers = [];
 
+// The main chat box DOM element
+var chatBox = document.getElementById('chat_box');
+
+// flag for when the app is still setting up the connection
+var isInitializing = true;
+
+// holds the user's username
+var myUserName;
 
 
 //////////////////////
@@ -10,28 +18,70 @@ var connectedPeers = [];
 /*********************************************************************************/
 
 	// handles "send" button click
-	document.getElementById('chat_submit').onclick = sendMessge;
+	document.getElementById('chat_form').onsubmit = sendMessge;
 	function sendMessge(){
 		var newMsg = document.getElementById('chat_input').value;
+		var sendObject = {};
+
+		if(myUserName){
+			sendObject.msg = newMsg;
+			addToBox(myUserName, newMsg);
+		}else{
+			myUserName = newMsg;
+			sendObject.username = newMsg;
+
+			chatBox.innerHTML = "";
+			document.getElementById('chat_submit').value = "Send";
+			document.getElementById('chat_input').placeholder = "Type Message...";
+			document.getElementById('chat_input').value = "";
+		}
+
+		var sendString = JSON.stringify(sendObject);
 
 		// loops through each peer and sends them the message
 		for(var i=0; i<connectedPeers.length; i++){
 			if(connectedPeers[i].dataChannel.readyState === "open"){
-				connectedPeers[i].dataChannel.send(newMsg);
+				connectedPeers[i].dataChannel.send(sendString);
 			}else{
 				console.log("Connection not open");
 			}
 		}
-		addToBox(newMsg);
+		return false;
 	}
 
 	// Adds a chat message to the chat box
-	var addToBox = function(msg){
-		var msgHTML=document.createElement("div");
-		msgHTML.innerHTML=msg;
-		document.getElementById('chat_box').appendChild(msgHTML);
+	var addToBox = function(name, msg){
+		var msgContainer=document.createElement("div");
+		msgContainer.className = "chat-message-container";
+
+		var msgName=document.createElement("div");
+		msgName.className = "chat-name";
+		msgName.innerHTML = name;
+
+		var msgMsg=document.createElement("div");
+		msgMsg.className = "chat-message";
+		msgMsg.innerHTML = msg;
+
+		msgContainer.appendChild(msgName);
+		msgContainer.appendChild(msgMsg);
+		chatBox.appendChild(msgContainer);
+
 		document.getElementById('chat_input').value = "";
 	};
+
+
+	// Is called when datachannel is open...
+	function dataChannelWasOpened(channel){
+		if(isInitializing === true){
+			document.getElementById('chat_form').style.display = "block";
+			isInitializing = false;
+		}
+
+		if(myUserName){
+			var nameMsg = JSON.stringify({"username": myUserName});
+			channel.send(nameMsg);
+		}
+	}
 
 /*_______________________________________________________________________________*/
 
@@ -114,7 +164,25 @@ var connectedPeers = [];
 				event.channel.onmessage = function(event){
 					console.log("Recieved a message:");
 					console.log(event.data);
-					addToBox(event.data);
+
+					var dataObject = JSON.parse(event.data);
+
+					// All messages should either provide peer's username
+					// or a new chat message
+					if(dataObject.username){
+						newConnection.username = dataObject.username;
+					}else if(dataObject.msg){
+						addToBox(newConnection.username, dataObject.msg);
+					}
+
+				};
+
+				event.channel.onopen = function(){
+					if(isInitializing){
+						chatBox.innerHTML = "DataChannel open. You're ready to Chat!";
+					}
+					console.log("Datachannel is open");
+					dataChannelWasOpened(event.channel);
 				};
 			};
 
@@ -133,6 +201,10 @@ var connectedPeers = [];
 						var channelOptions = {reliable: true};
 						createDataChannel(newConnection, channelOptions);
 						connectedPeers.push(newConnection);
+					}
+
+					if(isInitializing){
+						chatBox.innerHTML = "Peer Signaling in progress";
 					}
 
 					setConnection(newConnection);
@@ -183,7 +255,6 @@ var connectedPeers = [];
 			newConnection.ondatachannel = function(event){
 				console.log("Datachannel request recieved from peer");
 				console.dir(event);
-				//connectedPeers.push({dataChannel: event.channel});
 
 				newConnection.dataChannel = event.channel;
 				connectedPeers.push(newConnection);
@@ -192,7 +263,25 @@ var connectedPeers = [];
 				event.channel.onmessage = function(event){
 					console.log("Recieved a message:");
 					console.log(event.data);
-					addToBox(event.data);
+					
+					var dataObject = JSON.parse(event.data);
+
+					// All messages should either provide peer's username
+					// or a new chat message
+					if(dataObject.username){
+						newConnection.username = dataObject.username;
+					}else if(dataObject.msg){
+						addToBox(newConnection.username, dataObject.msg);
+					}
+				};
+
+				event.channel.onopen = function () {
+
+					if(isInitializing){
+						chatBox.innerHTML = "DataChannel open. You're ready to Chat!";
+					}
+					console.log("Datachannel is open");
+					dataChannelWasOpened(event.channel);
 				};
 			};
 
@@ -204,6 +293,10 @@ var connectedPeers = [];
 				connectedPeers.push(newConnection);
 			}
 
+
+			if(isInitializing){
+				chatBox.innerHTML = "Peer Signaling in progress";
+			}
 
 			// Callback
 			setConnection(newConnection);
@@ -272,13 +365,27 @@ var connectedPeers = [];
 		console.log("Datachannel Created");
 
 		clientChannel.onopen = function () {
+
+			if(isInitializing){
+				chatBox.innerHTML = "DataChannel open. You're ready to Chat!";
+			}
 			console.log("Datachannel is open");
+			dataChannelWasOpened(clientChannel);
 		};
 
 		clientChannel.onmessage = function(event){
 			console.log("Recieved a message:");
 			console.log(event.data);
-			addToBox(event.data);
+
+			var dataObject = JSON.parse(event.data);
+
+			// All messages should either provide peer's username
+			// or a new chat message
+			if(dataObject.username){
+				connection.username = dataObject.username;
+			}else if(dataObject.msg){
+				addToBox(connection.username, dataObject.msg);
+			}
 		};
 		clientChannel.onerror = function(err){
 			console.log("Error: "+err);

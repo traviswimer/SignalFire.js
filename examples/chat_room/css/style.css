@@ -17,17 +17,39 @@ h1{
 	margin: 0 auto;
 	width: 90%;
 }
+	.chat-message-container{
+		margin: 2px;
+	}
+		.chat-name{
+			color: #444;
+			float: left;
+			font-weight: bold;
+			text-align: right;
+			width: 75px;
+		}
+		.chat-message{
+			background-color: #f4f0de;
+			border-radius: 4px;
+			margin-left: 81px;
+			padding: 1px 4px;
+		}
 
 
 #chat_form{
-	margin: 0 auto;
+	display: none;
+	height: 2em;
+	margin: 3px auto;
 	width: 90%;
 }
 
 #chat_input{
+	font-size: 2em;
+	height: 100%;
 	width: 85%;
 }
 
 #chat_submit{
+	font-weight: bold;
+	height: 100%;
 	width: 12%;
 }

@@ -1,103 +1,25 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-  "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
 <head>
-  <title>P2P CHAT</title>
-
-  <script type="text/javascript" src="../../client/src/adaptor.js"></script>
-  <script type="text/javascript" src="../../client/src/socket.io.js"></script>
-  <script type="text/javascript" src="../../client/src/signalfire-client.js"></script>
-
-
+	<title>P2P CHAT</title>
+	<meta charset='utf-8'>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 
 <body>
 
-  <div style='border:thin solid black; height:400px; width:90%;' id='chat_box'>
-  </div>
+	<div style='border:thin solid black; height:400px; width:90%;' id='chat_box'>
+	</div>
 
-  <div>
-    <input type='text' id='chat_input'>
-    <input type='button' id='chat_submit' value='send'>
-  </div>
+	<div>
+		<input type='text' id='chat_input'>
+		<input type='button' id='chat_submit' value='send'>
+	</div>
 
-  <script type="text/javascript">
-    var connectedPeers=[];
+	<script type="text/javascript" src="../../client/src/adaptor.js"></script>
+	<script type="text/javascript" src="../../client/src/socket.io.js"></script>
+	<script type="text/javascript" src="../../client/src/signalfire-client.js"></script>
+	<script type="text/javascript" src="chat_room.js"></script>
 
-
-    var options = {
-        server: "http://localhost:3333",
-        connector: function(){
-          var newConnection = new RTCPeerConnection(
-            {
-              "iceServers": [{ "url": "stun:173.194.73.127:19302" }]
-            },
-            {
-              'optional': [
-                {'DtlsSrtpKeyAgreement': true}, 
-                {'RtpDataChannels': true }
-              ] 
-            }
-          );
-
-
-
-          var clientChannel = newConnection.createDataChannel("chat", {
-            reliable: false
-          });
-
-
-          clientChannel.onopen = function(){
-            console.log("channel open");
-          };
-
-          newConnection.dataChannel=clientChannel
-
-          clientChannel.onmessage = function(event){
-            console.log("RECIEVED A MESSAGE:");
-            console.log(event.data);
-            addToBox(event.data);
-          };
-
-
-          return newConnection;
-        },
-        onSignalingComplete: function(rtcPeerConnection){
-          console.log("CONNECTED!"); 
-          connectedPeers.push(rtcPeerConnection);
-
-        }
-      };
-
-      var conn = signalfire.connect(options,function(){
-        conn.emit('addToRoom',{
-          roomName:"test"
-        });
-      });
-
-
-
-      // messaging
-      document.getElementById('chat_submit').onclick=function(){
-        sendMessge();
-      };
-
-      var sendMessge = function(){
-        var newMsg = document.getElementById('chat_input').value;
-        console.log(newMsg);
-
-        for(var i=0; i<connectedPeers.length; i++){
-
-          connectedPeers[i].dataChannel.send(newMsg);
-        }
-        addToBox(newMsg);
-      };
-
-      var addToBox = function(msg){
-        var msgHTML=document.createElement("div");
-        msgHTML.innerHTML=msg;
-        document.getElementById('chat_box').appendChild(msgHTML);
-      };
-  </script>
 </body>
 </html>

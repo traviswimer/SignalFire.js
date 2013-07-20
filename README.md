@@ -38,14 +38,14 @@ var options = {
 	server: "http://localhost:3333",
 
 	// That will be called each time a new peer connection is created
-	connector: function(){
+	connector: function(startSignaling){
 		var newConnection = new RTCPeerConnection(
 			{
 			  "iceServers": [{ "url": "stun:stun.l.google.com:19302" }]
 			}
 		);
 
-		return newConnection;
+		startSignaling(newConnection);
 	},
 
 	// Callback function for when the signaling process is complete
@@ -121,6 +121,8 @@ Creates a socket connection with the specified server. Returns a socket.io manag
 *	**options** (object) - Setup options
 	*	server (string) - Required. Specifies the server to connect to. `server: "http://localhost:3333"`
 	*	connector (function) - Required. A function that creates and returns a new RTCPeerConnection object.
+		*	**Parameters**
+			*	startSignaling(peerConnection) - A callback function for that initializes the signaling process. Takes a single parameter that must be an RTCPeerConnection object.
 	*	onSignalingComplete (function) - Callback function for when the signaling process has successfully created a peer connection.
 	*	onSignalingFail (function) - Callback function for when there is an error in the signaling process.
 *	**successCallback** (function) - Callback function to be returned when a 

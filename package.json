@@ -1,6 +1,6 @@
 {
 	"name": "signalfire",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "node.js module for RTCPeerConnection signaling",
 	"main": "lib/signalfire.js",
 	"keywords": [
@@ -13,7 +13,6 @@
 	},
 	"devDependencies": {
 		"mocha": "*",
-		"supertest": "*",
 		"socket.io-client": "0.9.x"
 	},
 	"contributors": [

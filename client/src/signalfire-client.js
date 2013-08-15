@@ -296,8 +296,20 @@ var signalfire = function(){
 			return;
 		}
 
+
 		// Create new socket connection
-		var socket = io.connect(options.server, {'force new connection': true});
+		var socket;
+		if(typeof options.server === "string"){
+			// Server is a URL string for the server/port to connect to
+			try{
+				socket = io.connect(options.server, {'force new connection': true});
+			}catch(e){
+				failCallback(e);
+			}
+		}else{
+			// Server is an object that provides a socket-like API
+			socket = options.server;
+		}
 
 		// Create new peer once connected
 		socket.on('connect', function () {

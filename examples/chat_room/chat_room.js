@@ -26,6 +26,7 @@ var myUserName;
 		if(myUserName){
 			sendObject.msg = newMsg;
 			addToBox(myUserName, newMsg);
+			chatBox.scrollTop = chatBox.scrollHeight;
 		}else{
 			myUserName = newMsg;
 			sendObject.username = newMsg;
@@ -173,6 +174,7 @@ var myUserName;
 						newConnection.username = dataObject.username;
 					}else if(dataObject.msg){
 						addToBox(newConnection.username, dataObject.msg);
+						chatBox.scrollTop = chatBox.scrollHeight;
 					}
 
 				};
@@ -263,7 +265,7 @@ var myUserName;
 				event.channel.onmessage = function(event){
 					console.log("Recieved a message:");
 					console.log(event.data);
-					
+
 					var dataObject = JSON.parse(event.data);
 
 					// All messages should either provide peer's username
@@ -272,6 +274,7 @@ var myUserName;
 						newConnection.username = dataObject.username;
 					}else if(dataObject.msg){
 						addToBox(newConnection.username, dataObject.msg);
+						chatBox.scrollTop = chatBox.scrollHeight;
 					}
 				};
 
@@ -385,6 +388,7 @@ var myUserName;
 				connection.username = dataObject.username;
 			}else if(dataObject.msg){
 				addToBox(connection.username, dataObject.msg);
+				chatBox.scrollTop = chatBox.scrollHeight;
 			}
 		};
 		clientChannel.onerror = function(err){

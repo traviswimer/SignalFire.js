@@ -97,6 +97,13 @@ var signalfire = function(){
 				// create offer and send to server
 				rtcPeerConnection.createOffer(
 					function(offerResponse){
+
+						// Increase the size limit for datachannels
+						var removeSizeLimit = offerResponse.sdp.split("b=AS:30");
+						if(removeSizeLimit.length > 1){
+							offerResponse.sdp = removeSizeLimit[0] + "b=AS:1638400" + removeSizeLimit[1];
+						}
+
 						data.offer = offerResponse;
 						rtcPeerConnection.setLocalDescription(offerResponse, function(){
 							socket.emit('clientSendingOffer', data);

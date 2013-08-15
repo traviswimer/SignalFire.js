@@ -119,7 +119,7 @@ Returns the unique ID for the peer object.
 Creates a socket connection with the specified server. Returns a socket.io manager object.
 
 *	**options** (object) - Setup options
-	*	server (string) - Required. Specifies the server to connect to. `server: "http://localhost:3333"`
+	*	server (string || object) - Required. Specifies the server to connect to. `server: "http://localhost:3333"` or specify an object with a socket-like API (on, emit, ...).
 	*	connector (function) - Required. A function that creates and returns a new RTCPeerConnection object.
 		*	**Parameters**
 			*	startSignaling(peerConnection) - A callback function for that initializes the signaling process. Takes a single parameter that must be an RTCPeerConnection object.

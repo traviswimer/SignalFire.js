@@ -1,6 +1,6 @@
 /**********************************/
 /* Signalfire Javascript Library  */
-/* Version: 0.0.5                 */
+/* Version: 0.0.6                 */
 /*                                */
 /* Copyright 2013 Travis Wimer    */
 /* http://traviswimer.com         */
@@ -118,7 +118,7 @@ var signalfire = function(){
 						}
 					}
 				);
-			});
+			}, false);
 		}
 
 
@@ -164,7 +164,7 @@ var signalfire = function(){
 						}
 					);
 				});
-			});
+			}, true);
 
 		}
 
